@@ -60,8 +60,6 @@ any component can be replaced by anything that speaks it.
   and LiteLLM. Never share tables or let one service read or write another service's tables.
 - Open WebUI owns chat/session history, user accounts, and its application metadata in its
   own PostgreSQL database. Do not rely on SQLite or Firebase for persistent application data.
-  The current local Open WebUI setup still uses SQLite in its Docker volume until PostgreSQL
-  is configured; migrate before treating this as the long-term installation.
 - LiteLLM owns its keys, spend/usage records, and gateway metadata in its own PostgreSQL
   database.
 - PostgreSQL stores structured data, not every file. Keep Open WebUI uploads and generated

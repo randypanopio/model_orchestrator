@@ -6,8 +6,7 @@ remain in the persistent `openwebui_data` Docker volume. Both the database and t
 must be included in backups.
 
 The Postgres container creates separate databases and roles for Open WebUI and LiteLLM.
-LiteLLM's database is provisioned now so it can be enabled later without sharing tables or
-credentials with Open WebUI.
+LiteLLM uses its own database and credentials; the services do not share tables.
 
 Set persistent, random secrets in the repository-root `.env` file:
 
@@ -31,9 +30,8 @@ WebUI's admin settings before exposing the service beyond your local machine.
 Start and verify the stack from the repository root:
 
 ```bash
-docker compose up -d postgres openwebui caddy
-docker compose ps
-docker compose logs --tail=50 postgres openwebui caddy
+./scripts/start_stack.sh
+docker compose logs --tail=50 postgres openwebui caddy litellm
 ```
 
 Open `http://localhost` for local HTTP, or use the domain configured in `DOMAIN`.

@@ -51,6 +51,32 @@ services:
       postgres:
         condition: service_healthy
 
+  litellm:
+    image: ghcr.io/berriai/litellm:v1.108.0
+    restart: unless-stopped
+    command: ["--config", "/app/config.yaml", "--host", "0.0.0.0", "--port", "4000"]
+    environment:
+      DATABASE_URL: postgresql://${LITELLM_DB_USER:?Set LITELLM_DB_USER in .env}:${LITELLM_DB_PASSWORD:?Set LITELLM_DB_PASSWORD in .env}@postgres:5432/${LITELLM_DB_NAME:?Set LITELLM_DB_NAME in .env}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:?Set LITELLM_MASTER_KEY in .env}
+      LITELLM_SALT_KEY: ${LITELLM_SALT_KEY:?Set LITELLM_SALT_KEY in .env}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    volumes:
+      - ./config/litellm.yaml:/app/config.yaml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4000/health/readiness', timeout=5)"
+      interval: 10s
+      timeout: 8s
+      retries: 12
+      start_period: 30s
+
 volumes:
   caddy_data:
   caddy_config:

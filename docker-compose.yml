@@ -1,1 +1,29 @@
-# TODO: Add the pinned service images and env-driven configuration in build order.
+services:
+  caddy:
+    image: caddy:2.11.8-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - openwebui
+
+  openwebui:
+    image: openwebui/open-webui:0.13.0-slim
+    restart: unless-stopped
+    environment:
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY:?Set WEBUI_SECRET_KEY in .env}
+    volumes:
+      - openwebui_data:/app/backend/data
+
+volumes:
+  caddy_data:
+  caddy_config:
+  openwebui_data:

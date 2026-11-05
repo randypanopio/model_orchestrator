@@ -51,6 +51,29 @@ any component can be replaced by anything that speaks it.
   with streaming preserved end to end.
 - LiteLLM owns provider keys, budgets, retries, and fallbacks. Provider keys live ONLY here.
 
+## Data ownership and persistence
+
+- PostgreSQL is the only relational database technology for the project. Self-host it under
+  our control by default; changing the PostgreSQL host later is a configuration change, not
+  a database-engine migration.
+- Use one PostgreSQL server/cluster, with separate databases and credentials for Open WebUI
+  and LiteLLM. Never share tables or let one service read or write another service's tables.
+- Open WebUI owns chat/session history, user accounts, and its application metadata in its
+  own PostgreSQL database. Do not rely on SQLite or Firebase for persistent application data.
+  The current local Open WebUI setup still uses SQLite in its Docker volume until PostgreSQL
+  is configured; migrate before treating this as the long-term installation.
+- LiteLLM owns its keys, spend/usage records, and gateway metadata in its own PostgreSQL
+  database.
+- PostgreSQL stores structured data, not every file. Keep Open WebUI uploads and generated
+  media in persistent storage we control (initially a Docker volume); back up that storage
+  together with PostgreSQL. Do not assume a provider's temporary image URL is a durable copy.
+- Caddy state such as certificates also uses persistent storage. Document and back up every
+  volume containing data needed to restore the deployment.
+- Initially, LiteLLM may send requests to external model providers using their API credentials.
+  Treat provider-side prompt retention as subject to each provider's policies. Later, connect
+  self-hosted inference endpoints through LiteLLM so the Router and Open WebUI keep the same
+  API path.
+
 ## Terminology (keep these distinct)
 
 - **Caddy** = the reverse proxy / front door. HTTPS, path routing, later auth. Knows nothing about LLMs.

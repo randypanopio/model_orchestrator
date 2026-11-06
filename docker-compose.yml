@@ -45,10 +45,12 @@ services:
     environment:
       WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY:?Set WEBUI_SECRET_KEY in .env}
       DATABASE_URL: postgresql://${OPENWEBUI_DB_USER:?Set OPENWEBUI_DB_USER in .env}:${OPENWEBUI_DB_PASSWORD:?Set OPENWEBUI_DB_PASSWORD in .env}@postgres:5432/${OPENWEBUI_DB_NAME:?Set OPENWEBUI_DB_NAME in .env}
+      OPENAI_API_BASE_URLS: http://router:8000/v1
+      OPENAI_API_KEYS: ${ROUTER_API_KEY:?Set ROUTER_API_KEY in .env}
     volumes:
       - openwebui_data:/app/backend/data
     depends_on:
-      postgres:
+      router:
         condition: service_healthy
 
   litellm:
@@ -76,6 +78,31 @@ services:
       timeout: 8s
       retries: 12
       start_period: 30s
+
+  router:
+    build:
+      context: ./services/router
+    restart: unless-stopped
+    environment:
+      ROUTER_API_KEY: ${ROUTER_API_KEY:?Set ROUTER_API_KEY in .env}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:?Set LITELLM_MASTER_KEY in .env}
+      LITELLM_BASE_URL: http://litellm:4000/v1
+      MODEL_CONFIG_PATH: /app/config/models.yaml
+    volumes:
+      - ./config/models.yaml:/app/config/models.yaml:ro
+    depends_on:
+      litellm:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=5)"
+      interval: 10s
+      timeout: 8s
+      retries: 10
+      start_period: 10s
 
 volumes:
   caddy_data:

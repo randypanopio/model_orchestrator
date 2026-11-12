@@ -1,0 +1,8 @@
+services:
+  openwebui:
+    volumes:
+      - ./deploy/certs/rds-global-bundle.pem:/etc/ssl/certs/rds-global-bundle.pem:ro
+
+  litellm:
+    volumes:
+      - ./deploy/certs/rds-global-bundle.pem:/etc/ssl/certs/rds-global-bundle.pem:ro

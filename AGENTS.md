@@ -65,6 +65,13 @@ any component can be replaced by anything that speaks it.
 - PostgreSQL stores structured data, not every file. Keep Open WebUI uploads and generated
   media in persistent storage we control (initially a Docker volume); back up that storage
   together with PostgreSQL. Do not assume a provider's temporary image URL is a durable copy.
+- The `openwebui_data` Docker volume is host-local and not a long-term storage tier. Plan to
+  move uploads and generated media to durable object storage (for example, a private AWS S3
+  bucket) and verify backup/restore before depending on it for long-term retention.
+- Configure Open WebUI and LiteLLM with separate database URLs so the same Compose stack can
+  use local PostgreSQL or managed PostgreSQL such as AWS RDS. For managed databases, provision
+  the two databases and credentials separately, keep the endpoint private, require verified
+  TLS, and back up/restore each service database independently.
 - Caddy state such as certificates also uses persistent storage. Document and back up every
   volume containing data needed to restore the deployment.
 - Initially, LiteLLM may send requests to external model providers using their API credentials.

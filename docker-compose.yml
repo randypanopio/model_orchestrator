@@ -1,17 +1,19 @@
 services:
   postgres:
+    profiles:
+      - local-db
     image: postgres:17.8-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
-      OPENWEBUI_DB_NAME: ${OPENWEBUI_DB_NAME:?Set OPENWEBUI_DB_NAME in .env}
-      OPENWEBUI_DB_USER: ${OPENWEBUI_DB_USER:?Set OPENWEBUI_DB_USER in .env}
-      OPENWEBUI_DB_PASSWORD: ${OPENWEBUI_DB_PASSWORD:?Set OPENWEBUI_DB_PASSWORD in .env}
-      LITELLM_DB_NAME: ${LITELLM_DB_NAME:?Set LITELLM_DB_NAME in .env}
-      LITELLM_DB_USER: ${LITELLM_DB_USER:?Set LITELLM_DB_USER in .env}
-      LITELLM_DB_PASSWORD: ${LITELLM_DB_PASSWORD:?Set LITELLM_DB_PASSWORD in .env}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      OPENWEBUI_DB_NAME: ${OPENWEBUI_DB_NAME:-}
+      OPENWEBUI_DB_USER: ${OPENWEBUI_DB_USER:-}
+      OPENWEBUI_DB_PASSWORD: ${OPENWEBUI_DB_PASSWORD:-}
+      LITELLM_DB_NAME: ${LITELLM_DB_NAME:-}
+      LITELLM_DB_USER: ${LITELLM_DB_USER:-}
+      LITELLM_DB_PASSWORD: ${LITELLM_DB_PASSWORD:-}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./services/postgres/init/01-create-databases.sh:/docker-entrypoint-initdb.d/01-create-databases.sh:ro
@@ -44,7 +46,7 @@ services:
     restart: unless-stopped
     environment:
       WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY:?Set WEBUI_SECRET_KEY in .env}
-      DATABASE_URL: postgresql://${OPENWEBUI_DB_USER:?Set OPENWEBUI_DB_USER in .env}:${OPENWEBUI_DB_PASSWORD:?Set OPENWEBUI_DB_PASSWORD in .env}@postgres:5432/${OPENWEBUI_DB_NAME:?Set OPENWEBUI_DB_NAME in .env}
+      DATABASE_URL: ${OPENWEBUI_DATABASE_URL:-postgresql://${OPENWEBUI_DB_USER:-openwebui}:${OPENWEBUI_DB_PASSWORD:-}@postgres:5432/${OPENWEBUI_DB_NAME:-openwebui}}
       OPENAI_API_BASE_URLS: http://router:8000/v1
       OPENAI_API_KEYS: ${ROUTER_API_KEY:?Set ROUTER_API_KEY in .env}
     volumes:
@@ -58,16 +60,13 @@ services:
     restart: unless-stopped
     command: ["--config", "/app/config.yaml", "--host", "0.0.0.0", "--port", "4000"]
     environment:
-      DATABASE_URL: postgresql://${LITELLM_DB_USER:?Set LITELLM_DB_USER in .env}:${LITELLM_DB_PASSWORD:?Set LITELLM_DB_PASSWORD in .env}@postgres:5432/${LITELLM_DB_NAME:?Set LITELLM_DB_NAME in .env}
+      DATABASE_URL: ${LITELLM_DATABASE_URL:-postgresql://${LITELLM_DB_USER:-litellm}:${LITELLM_DB_PASSWORD:-}@postgres:5432/${LITELLM_DB_NAME:-litellm}}
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:?Set LITELLM_MASTER_KEY in .env}
       LITELLM_SALT_KEY: ${LITELLM_SALT_KEY:?Set LITELLM_SALT_KEY in .env}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
       - ./config/litellm.yaml:/app/config.yaml:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
     healthcheck:
       test:
         - CMD
